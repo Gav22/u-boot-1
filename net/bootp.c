@@ -172,6 +172,7 @@ static void store_net_params(struct bootp_hdr *bp)
 	    !net_boot_file_name_explicit) {
 		copy_filename(net_boot_file_name, bp->bp_file,
 			      sizeof(net_boot_file_name));
+			      env_set("pxeoffer", "1");
 	}
 
 	debug("net_boot_file_name: %s\n", net_boot_file_name);

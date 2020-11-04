@@ -551,6 +551,9 @@ int phy_init(void)
 #ifdef CONFIG_PHY_NCSI
 	phy_ncsi_init();
 #endif
+#ifdef CONFIG_PHY_KSZ8794_SPI
+	phy_ksz8794_spi_init();
+#endif	#endif
 #ifdef CONFIG_PHY_XILINX_GMII2RGMII
 	phy_xilinx_gmii2rgmii_init();
 #endif

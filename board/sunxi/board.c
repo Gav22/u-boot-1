@@ -18,8 +18,12 @@
 #include <init.h>
 #include <log.h>
 #include <mmc.h>
+#include <spi.h>
+#include <spi_flash.h>
+#include <i2c_eeprom.h>
 #include <axp_pmic.h>
 #include <generic-phy.h>
+#include <miiphy.h>
 #include <phy-sun4i-usb.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/cpu.h>
@@ -43,6 +47,7 @@
 #include <spl.h>
 #include <sy8106a.h>
 #include <asm/setup.h>
+
 
 #if defined CONFIG_VIDEO_LCD_PANEL_I2C && !(defined CONFIG_SPL_BUILD)
 /* So that we can use pin names in Kconfig and sunxi_name_to_gpio() */
@@ -271,6 +276,38 @@ int board_init(void)
 	gpio_request(macpwr_pin, "macpwr");
 	gpio_direction_output(macpwr_pin, 1);
 #endif
+
+/* MSCM Additions */
+
+	{
+		unsigned int pl2, pl3, pl4, ph9, ph11, ph10;
+		gpio_lookup_name("PH9", NULL, NULL, &ph9);
+		gpio_lookup_name("PH11", NULL, NULL, &ph11);
+		gpio_lookup_name("PL2", NULL, NULL, &pl2);
+		gpio_lookup_name("PL3", NULL, NULL, &pl3);
+		gpio_lookup_name("PL4", NULL, NULL, &pl4);
+		gpio_lookup_name("PH10", NULL, NULL, &ph10); // ~USB_RESET
+		gpio_request(ph9, "blue");
+		gpio_request(pl2, "wifi_en");
+		gpio_request(pl3, "wifi_wake"); // Enable PSU when low
+		gpio_request(pl4, "wifi_rst");
+		gpio_request(ph11, "irq_rst");
+		gpio_request(ph10, "usb_rst");
+		//gpio_direction_output(pl3, 0);
+		//mdelay(5);
+		gpio_direction_output(ph9, 1);
+		// Reset Ethernet PHY / Switch - see sun8i_emac.c, we do it here to support KSZ8794 init too
+		// Reset USB hub if present
+		gpio_direction_output(ph10, 0);
+		gpio_direction_output(ph11, 0);
+		mdelay(10);
+		gpio_direction_output(ph10, 1);
+		gpio_direction_output(ph11, 1);
+		mdelay(10);
+		//gpio_direction_output(pl2, 1);
+		//mdelay(5);
+		//gpio_direction_output(pl4, 1);
+	}
 
 #ifdef CONFIG_DM_I2C
 	/*
@@ -772,6 +809,139 @@ static void parse_spl_header(const uint32_t spl_addr)
 	/* otherwise assume .scr format (mkimage-type script) */
 	env_set_hex("fel_scriptaddr", spl->fel_script_address);
 }
+/*
+ *KSZ8794 SPI setup
+ */
+#ifdef WAND_MANUF_IN_SPI
+#ifndef CONFIG_ENV_SPI_BUS
+# define CONFIG_ENV_SPI_BUS	CONFIG_SF_DEFAULT_BUS
+#endif
+#ifndef CONFIG_ENV_SPI_CS
+#define CONFIG_ENV_SPI_CS	CONFIG_SF_DEFAULT_CS
+#endif
+#ifndef CONFIG_ENV_SPI_MAX_HZ
+# define CONFIG_ENV_SPI_MAX_HZ	CONFIG_SF_DEFAULT_SPEED
+#endif
+#ifndef CONFIG_ENV_SPI_MODE
+# define CONFIG_ENV_SPI_MODE	CONFIG_SF_DEFAULT_MODE
+#endif
+
+#define CONFIG_ENV_ROM_OFFSET		0xde000
+#define CONFIG_ENV_ROM_SIZE			0x01000
+#define CONFIG_ENV_ROM_LEN			(CONFIG_ENV_ROM_SIZE - 4)
+#else
+#define CONFIG_ENV_I2C_ADDR			0x50
+#define CONFIG_ENV_ROM_OFFSET		0
+#define CONFIG_ENV_ROM_SIZE			256
+#define CONFIG_ENV_ROM_LEN			(CONFIG_ENV_ROM_SIZE - 4)
+#endif
+
+/*
+ * Read manufacturing ROM data from EEPROM / SPI flash
+ *
+ *static int read_spi_rom(void) {
+ */
+ static int read_mfg_rom(void) {
+	int	ret = 0;
+
+#if (defined(CONFIG_DM_SPI_FLASH) || defined(CONFIG_DM_I2C))
+#ifdef WAND_MANUF_IN_SPI
+/*#ifdef CONFIG_DM_SPI_FLASH
+ *	struct udevice *new;
+ */
+	struct spi_flash *env_flash;
+#else
+#endif
+	struct udevice *new;
+	char *buf = NULL;
+
+	buf = (char *)memalign(ARCH_DMA_MINALIGN, CONFIG_ENV_ROM_SIZE);
+	if (!buf) {
+		return -EIO;
+	}
+	/* speed and mode will be read from DT */
+#ifdef WAND_MANUF_IN_SPI
+	ret = spi_flash_probe_bus_cs(CONFIG_ENV_SPI_BUS, CONFIG_ENV_SPI_CS,
+				     CONFIG_ENV_SPI_MAX_HZ, CONFIG_ENV_SPI_MODE,
+				     &new);
+	if (ret) {
+		//printf("read_spi_rom: can't get SPI bus, ret=%d\n", ret);
+		printf("read_mfg_rom: can't get SPI bus, ret=%d\n", ret);
+		goto out;
+	}
+
+	env_flash = dev_get_uclass_priv(new);
+
+	if (!env_flash) {
+		//printf("read_spi_rom: can't get flash device\n");
+		printf("read_mfg_rom: can't get SPI flash device\n");
+		ret = -EIO;
+		goto out;
+	}
+
+	ret = spi_flash_read(env_flash,
+		CONFIG_ENV_ROM_OFFSET, CONFIG_ENV_ROM_SIZE, buf);
+
+	spi_flash_free(env_flash);
+#else
+	ret = uclass_first_device_err(UCLASS_I2C_EEPROM, &new);
+	if (ret) {
+		printf("read_mfg_rom: can't get I2C EEPROM device\n");
+		return ret;
+	}
+
+	ret = i2c_eeprom_read(new, CONFIG_ENV_ROM_OFFSET, (u8*) buf, CONFIG_ENV_ROM_SIZE);
+#endif
+	if (ret == 0) {
+		uint32_t crc;
+		char *bptr = (char *) buf + 4;
+		/* We have the ROM with mac addresses and serial numbers */
+		/* Like env, first 4 bytes are crc */
+		memcpy(&crc, buf, sizeof(crc));
+
+		if (crc32(0, (void*)bptr, CONFIG_ENV_ROM_LEN) != crc) {
+			printf("Bad CRC in mfg ROM, need %08X\n", crc32(0, (void*)bptr, CONFIG_ENV_ROM_LEN));
+			ret = -EIO;
+			goto out;
+		}
+
+		/* Parse, same format as standard environment, forcibly setting environment variables */
+		while (*bptr != '\0' && (bptr-buf) < CONFIG_ENV_ROM_SIZE) {
+			char *name, *val;
+			/* name */
+			for (name = bptr; *bptr != '=' && *bptr && (bptr-buf) < CONFIG_ENV_ROM_SIZE; bptr++)
+				;
+			if (*name) {
+				/* ready set go */
+				hdelete_r(name, &env_htab, H_FORCE);
+			}
+			if (*bptr) { /* = */
+				/* terminate in place of = */
+				*bptr++ = '\0';
+				/* value */
+				for (val = bptr; *bptr && (bptr-buf) < CONFIG_ENV_ROM_SIZE; bptr++)
+					;
+				if (*val) {
+					ENTRY e, *ep;
+					e.key = name;
+					e.data = val;
+					e.flags = 0;
+					hsearch_r(e, ENTER, &ep, &env_htab, H_FORCE);
+				}
+			}
+			bptr++;
+		}
+
+
+
+
+	}
+out:
+	free(buf);
+
+#endif /* CONFIG_DM_SPI_FLASH */
+	return ret;
+}
 
 /*
  * Note this function gets called multiple times.
@@ -784,6 +954,9 @@ static void setup_environment(const void *fdt)
 	uint8_t mac_addr[6];
 	char ethaddr[16];
 	int i, ret;
+
+	//read_spi_rom();
+	read_mfg_rom();
 
 	ret = sunxi_get_sid(sid);
 	if (ret == 0 && sid[0] != 0) {
@@ -859,6 +1032,8 @@ int misc_init_r(void)
 		env_set("mmc_bootdev", "0");
 	} else if (boot == BOOT_DEVICE_MMC2) {
 		env_set("mmc_bootdev", "1");
+	} else if (boot == BOOT_DEVICE_SPI) {
+		env_set("spi_booted", "1");
 	}
 
 	setup_environment(gd->fdt_blob);
@@ -870,15 +1045,90 @@ int misc_init_r(void)
 	return 0;
 }
 
-int ft_board_setup(void *blob, struct bd_info *bd)
+static void sunxi_enable_ft_option(void *blob, int ofs) {
+	char *tmp;
+
+	/* Set the chosen ethernet configuration to "okay" */
+	fdt_status_okay(blob, ofs);
+	/* We also need to set up the first local-mac-address for this one, see ticket #1884,
+	 * reason being that the ethernet0 alias may not point to the chosen one */
+	tmp = env_get("ethaddr");
+	if (tmp) {
+		u8 mac_addr[6];
+		int j;
+		char *end;
+		for (j = 0; j < 6; j++) {
+			mac_addr[j] = tmp ?
+				      simple_strtoul(tmp, &end, 16) : 0;
+			if (tmp)
+				tmp = (*end) ? end + 1 : end;
+		}
+		fdt_setprop(blob, ofs, "local-mac-address", &mac_addr, 6);
+	}
+
+}
+
+int ft_board_setup(void *blob, bd_t *bd)
+
+//int ft_board_setup(void *blob, struct bd_info *bd)
 {
 	int __maybe_unused r;
+	int ofs = 0;
 
 	/*
 	 * Call setup_environment again in case the boot fdt has
 	 * ethernet aliases the u-boot copy does not have.
 	 */
 	setup_environment(blob);
+
+	/* Is the KSZ present? Tweak the fdt accordingly */
+	if (miiphy_get_dev_by_name("ksz8794_spi")) {
+		ofs = fdt_node_offset_by_compatible(blob, 0, "fsn,wand2-3-mac");
+	} else {
+		/* No, we revert to stripped down single emac mode */
+		ofs = fdt_node_offset_by_compatible(blob, 0, "fsn,wand2-1-mac");
+	}
+	if (ofs > 0) {
+		sunxi_enable_ft_option(blob, ofs);
+	} else {
+		printf("Error: unable to find compatible ethernet configuration in FDT\n");
+	}
+
+	/* Copy manufacturing info */
+	r = fdt_find_or_add_subnode(blob, 0, "mfginfo");
+	if (r >= 0) {
+		int po;
+		for (po = fdt_first_property_offset(blob, r); po >= 0; po = fdt_next_property_offset(blob, po)) {
+			const char* name;
+			const struct fdt_property *prop;
+			char *val;
+			prop = fdt_get_property_by_offset(blob, po, NULL);
+			name = fdt_string(blob, fdt32_to_cpu(prop->nameoff));
+			//printf("looking for %s\n", name);
+			/* look for the property in the environment */
+			val = env_get(name);
+			if (val) {
+				fdt_setprop_string(blob, r, name, val);
+			}
+		}
+	}
+
+	/* Communicate the chosen boot device */
+	r = fdt_find_or_add_subnode(blob, 0, "chosen");
+	if (r >= 0) {
+		uint32_t boot = sunxi_get_boot_device();
+		const char* bdev = "unknown";
+		if (boot == BOOT_DEVICE_BOARD) {
+			bdev = "fel";
+		} else if (boot == BOOT_DEVICE_MMC1) {
+			bdev = "mmc0";
+		} else if (boot == BOOT_DEVICE_MMC2) {
+			bdev = "mmc2";
+		} else if (boot == BOOT_DEVICE_SPI) {
+			bdev = "spi";
+		}
+		fdt_setprop_string(blob, r, "boot0-device", bdev);
+	}
 
 #ifdef CONFIG_VIDEO_DT_SIMPLEFB
 	r = sunxi_simplefb_setup(blob);

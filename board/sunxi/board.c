@@ -41,7 +41,6 @@
 #include <asm/io.h>
 #include <u-boot/crc.h>
 #include <env_internal.h>
-#include <environment.h>
 #include <linux/libfdt.h>
 #include <nand.h>
 #include <net.h>

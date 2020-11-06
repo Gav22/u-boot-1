@@ -41,6 +41,8 @@
 #include <asm/io.h>
 #include <u-boot/crc.h>
 #include <env_internal.h>
+#include <crc.h>
+#include <environment.h>
 #include <linux/libfdt.h>
 #include <nand.h>
 #include <net.h>
@@ -610,7 +612,8 @@ static void mmc_pinmux_setup(int sdc)
 	}
 }
 
-int board_mmc_init(struct bd_info *bis)
+//int board_mmc_init(struct bd_info *bis)
+int board_mmc_init(struct bd_t *bis)
 {
 	__maybe_unused struct mmc *mmc0, *mmc1;
 

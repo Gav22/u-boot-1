@@ -41,6 +41,7 @@
 #include <asm/io.h>
 #include <u-boot/crc.h>
 #include <env_internal.h>
+#include <environment.h>
 #include <linux/libfdt.h>
 #include <nand.h>
 #include <net.h>
@@ -923,7 +924,7 @@ static void parse_spl_header(const uint32_t spl_addr)
 				for (val = bptr; *bptr && (bptr-buf) < CONFIG_ENV_ROM_SIZE; bptr++)
 					;
 				if (*val) {
-					KENTRY e, *ep;
+					ENTRY e, *ep;
 					e.key = name;
 					e.data = val;
 					e.flags = 0;

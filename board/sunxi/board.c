@@ -611,7 +611,7 @@ static void mmc_pinmux_setup(int sdc)
 }
 
 //int board_mmc_init(struct bd_info *bis)
-int board_mmc_init(struct bd_t *bis)
+int board_mmc_init(bd_t *bis)
 {
 	__maybe_unused struct mmc *mmc0, *mmc1;
 
@@ -923,7 +923,7 @@ static void parse_spl_header(const uint32_t spl_addr)
 				for (val = bptr; *bptr && (bptr-buf) < CONFIG_ENV_ROM_SIZE; bptr++)
 					;
 				if (*val) {
-					ENTRY e, *ep;
+					KENTRY e, *ep;
 					e.key = name;
 					e.data = val;
 					e.flags = 0;

@@ -610,8 +610,8 @@ static void mmc_pinmux_setup(int sdc)
 	}
 }
 
-//int board_mmc_init(struct bd_info *bis)
-int board_mmc_init(bd_t *bis)
+int board_mmc_init(struct bd_info *bis)
+//int board_mmc_init(bd_t *bis)
 {
 	__maybe_unused struct mmc *mmc0, *mmc1;
 
@@ -1069,9 +1069,9 @@ static void sunxi_enable_ft_option(void *blob, int ofs) {
 
 }
 
-int ft_board_setup(void *blob, bd_t *bd)
+//int ft_board_setup(void *blob, bd_t *bd)
 
-//int ft_board_setup(void *blob, struct bd_info *bd)
+int ft_board_setup(void *blob, struct bd_info *bd)
 {
 	int __maybe_unused r;
 	int ofs = 0;

@@ -32,8 +32,10 @@
 
 #ifdef CONFIG_REGEX
 #define ENV_DOT_ESCAPE "\\"
+#define ETHADDR_WILDCARD "\\d?"
 #else
 #define ENV_DOT_ESCAPE
+#define ETHADDR_WILDCARD
 #endif
 
 #ifdef CONFIG_CMD_DNS

@@ -923,12 +923,26 @@ static void parse_spl_header(const uint32_t spl_addr)
 				for (val = bptr; *bptr && (bptr-buf) < CONFIG_ENV_ROM_SIZE; bptr++)
 					;
 				if (*val) {
-					env_entry e, *ep;
-					e.key = name;
-					e.data = val;
-					e.flags = 0;
-					//hsearch_r(e, ENTER, &ep, &env_htab, H_FORCE);
+//					struct env_entry e, *ep;
+//					e.key = name;
+//					e.data = val;
+//					e.flags = 0;
+//					hsearch_r(e, ENTER, &ep, &env_htab, H_FORCE);
+					struct env_entry e, *ep;
+
+					e.key	= name;
+					e.data	= val;
 					hsearch_r(e, ENV_FIND, &ep, &env_htab, 0);
+
+					/* does the env variable actually exist? */
+					if (ep != NULL) {
+					/* the flag list is empty, so clear the flags */
+					if (value == NULL || strlen(value) == 0)
+					ep->flags = 0;
+					else
+					/* assign the requested flags */
+					ep->flags = env_parse_flags_to_bin(value);
+					}
 				}
 			}
 			bptr++;

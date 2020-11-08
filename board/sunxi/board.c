@@ -937,7 +937,7 @@ static void parse_spl_header(const uint32_t spl_addr)
 					/* does the env variable actually exist? */
 					if (ep != NULL) {
 					/* the flag list is empty, so clear the flags */
-					if (value == NULL || strlen(value) == 0)
+					if (val == NULL || strlen(val) == 0)
 					ep->flags = 0;
 					else
 					/* assign the requested flags */

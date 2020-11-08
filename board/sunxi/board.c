@@ -941,7 +941,7 @@ static void parse_spl_header(const uint32_t spl_addr)
 					ep->flags = 0;
 					else
 					/* assign the requested flags */
-					ep->flags = env_parse_flags_to_bin(value);
+					ep->flags = env_parse_flags_to_bin(val);
 					}
 				}
 			}

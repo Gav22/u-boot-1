@@ -889,8 +889,9 @@ static void parse_spl_header(const uint32_t spl_addr)
 		printf("read_mfg_rom: can't get I2C EEPROM device\n");
 		return ret;
 	}
-	int i2c_eeprom_read;
+
 	ret = i2c_eeprom_read(new, CONFIG_ENV_ROM_OFFSET, (u8*) buf, CONFIG_ENV_ROM_SIZE);
+
 #endif
 	if (ret == 0) {
 		uint32_t crc;
@@ -938,10 +939,9 @@ static void parse_spl_header(const uint32_t spl_addr)
 					/* the flag list is empty, so clear the flags */
 					if (val == NULL || strlen(val) == 0)
 					ep->flags = 0;
-					else
+//					else
 					/* assign the requested flags */
-						int env_parse_flags_to_bin;
-					ep->flags = env_parse_flags_to_bin(val);
+//					ep->flags = env_parse_flags_to_bin(val);
 					}
 				}
 			}
@@ -1026,7 +1026,7 @@ static void setup_environment(const void *fdt)
 				"%08x%08x", sid[0], sid[3]);
 
 			env_set("serial#", serial_string);
-		}
+		}env_parse_flags_to_bin
 	}
 }
 

@@ -1026,7 +1026,7 @@ static void setup_environment(const void *fdt)
 				"%08x%08x", sid[0], sid[3]);
 
 			env_set("serial#", serial_string);
-		}env_parse_flags_to_bin
+		}
 	}
 }
 

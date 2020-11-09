@@ -890,7 +890,7 @@ static void parse_spl_header(const uint32_t spl_addr)
 		return ret;
 	}
 
-	ret = i2c_eeprom_read(dev, CONFIG_ENV_ROM_OFFSET, (uint8_t *)buf, CONFIG_ENV_ROM_SIZE);
+	ret = i2c_eeprom_read(new, CONFIG_ENV_ROM_OFFSET, (uint8_t *)buf, CONFIG_ENV_ROM_SIZE);
 	if (ret) {
 		printf("%s: Could not read EEPROM\n", __func__);
 		return ret;

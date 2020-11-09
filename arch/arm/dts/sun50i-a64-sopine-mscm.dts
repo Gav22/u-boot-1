@@ -267,13 +267,13 @@
 	status = "okay";
 };
 
-&ac_power_supply {
-	status = "okay";
-};
+//&ac_power_supply {
+//	status = "okay";
+//};
 
-&battery_power_supply {
-	status = "okay";
-};
+//&battery_power_supply {
+//	status = "okay";
+//};
 
 &codec {
 	status = "okay";

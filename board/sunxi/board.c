@@ -891,6 +891,8 @@ static void parse_spl_header(const uint32_t spl_addr)
 	}
 
 	ret = i2c_eeprom_read(new, CONFIG_ENV_ROM_OFFSET, (u8*) buf, CONFIG_ENV_ROM_SIZE);
+	if (ret)
+		return ret;
 
 #endif
 	if (ret == 0) {

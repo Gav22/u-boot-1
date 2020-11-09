@@ -21,6 +21,7 @@
 #include <spi.h>
 #include <spi_flash.h>
 #include <i2c_eeprom.h>
+#include <i2c.h>
 #include <axp_pmic.h>
 #include <generic-phy.h>
 #include <miiphy.h>

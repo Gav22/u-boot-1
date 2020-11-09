@@ -844,7 +844,6 @@ static void parse_spl_header(const uint32_t spl_addr)
  */
  static int read_mfg_rom(void) {
 	int	ret = 0;
-
 #if (defined(CONFIG_DM_SPI_FLASH) || defined(CONFIG_DM_I2C))
 #ifdef WAND_MANUF_IN_SPI
 /*#ifdef CONFIG_DM_SPI_FLASH
@@ -890,8 +889,7 @@ static void parse_spl_header(const uint32_t spl_addr)
 		printf("read_mfg_rom: can't get I2C EEPROM device\n");
 		return ret;
 	}
-
-	ret = i2c_eeprom_read(new, CONFIG_ENV_ROM_OFFSET, (u8*) buf, CONFIG_ENV_ROM_SIZE);
+	ret = i2c_eeprom_read::i2c_eeprom_read(new, CONFIG_ENV_ROM_OFFSET, (u8*) buf, CONFIG_ENV_ROM_SIZE);
 #endif
 	if (ret == 0) {
 		uint32_t crc;
@@ -941,7 +939,7 @@ static void parse_spl_header(const uint32_t spl_addr)
 					ep->flags = 0;
 					else
 					/* assign the requested flags */
-					ep->flags = env_parse_flags_to_bin(val);
+					ep->flags = env_parse_flags_to_bin::env_parse_flags_to_bin(val);
 					}
 				}
 			}

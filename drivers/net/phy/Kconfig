@@ -270,5 +270,13 @@ config PHY_FIXED
 config PHY_NCSI
 	bool "NC-SI based PHY"
 	depends on DM_ETH
+	
+config PHY_KSZ8794_SPI
+	bool "Microchip KSZ8794 Switch/PHY"
+	depends on DM_ETH
+	help
+	  Microchip KSZ8794 is a 4 port 100Base-T switch/PHY with GMII uplink. 
+	  The switch and PHY registers can be accessed using SPI. This driver
+	  also simulates an MDIO bus over SPI.
 
 endif #PHYLIB

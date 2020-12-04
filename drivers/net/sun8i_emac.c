@@ -908,6 +908,7 @@ static int sun8i_emac_eth_ofdata_to_platdata(struct udevice *dev)
 	int offset = 0;
 #if CONFIG_IS_ENABLED(DM_GPIO)
 	int reset_flags = GPIOD_IS_OUT;
+	int ret = 0;
 #endif
 	int ret;
 

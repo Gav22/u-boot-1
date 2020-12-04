@@ -10,12 +10,15 @@
 #include <common.h>
 #include <console.h>
 #include <dm.h>
+#include <log.h>
 #include <malloc.h>
 #include <net.h>
 #include <command.h>
 #include <miiphy.h>
 #include <phy.h>
 #include <errno.h>
+#include <linux/bitops.h>
+#include <linux/delay.h>
 #include <linux/err.h>
 #include <linux/compiler.h>
 
@@ -548,6 +551,9 @@ int phy_init(void)
 #ifdef CONFIG_PHY_NCSI
 	phy_ncsi_init();
 #endif
+#ifdef CONFIG_PHY_KSZ8794_SPI
+	phy_ksz8794_spi_init();
+#endif	#endif
 #ifdef CONFIG_PHY_XILINX_GMII2RGMII
 	phy_xilinx_gmii2rgmii_init();
 #endif

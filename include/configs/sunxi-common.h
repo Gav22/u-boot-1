@@ -253,6 +253,9 @@ extern int soft_i2c_gpio_scl;
 #endif
 #endif /* ifdef CONFIG_REQUIRE_SERIAL_CONSOLE */
 
+/* GPIO */
+#define CONFIG_SUNXI_GPIO
+
 #ifdef CONFIG_VIDEO_SUNXI
 /*
  * The amount of RAM to keep free at the top of RAM when relocating u-boot,
@@ -401,6 +404,7 @@ extern int soft_i2c_gpio_scl;
 #define BOOTENV_DEV_NAME_FEL(devtypeu, devtypel, instance) \
 	"fel "
 
+#if 0
 #define BOOT_TARGET_DEVICES(func) \
 	func(FEL, fel, na) \
 	BOOT_TARGET_DEVICES_MMC(func) \
@@ -408,6 +412,28 @@ extern int soft_i2c_gpio_scl;
 	BOOT_TARGET_DEVICES_USB(func) \
 	BOOT_TARGET_DEVICES_PXE(func) \
 	BOOT_TARGET_DEVICES_DHCP(func)
+#else
+
+/* MW: we need a different pxe implementation and a different boot order by default */
+#define BOOTENV_DEV_PXE2(devtypeu, devtypel, instance) \
+	"pxedhcp_cmd=setenv autoload 0; dhcp; test \"${pxeoffer}\" = \"1\"\0" \
+	"bootcmd_pxe=" \
+		"if run pxedhcp_cmd; then " \
+		"if pxe get; then " \
+			"pxe boot; " \
+		"fi; fi\0"
+#define BOOTENV_DEV_NAME_PXE2(devtypeu, devtypel, instance) \
+	"pxe "
+
+#define BOOT_TARGET_DEVICES(func) \
+	func(FEL, fel, na) \
+	BOOT_TARGET_DEVICES_PXE(func) \
+	BOOT_TARGET_DEVICES_USB(func) \
+	BOOT_TARGET_DEVICES_MMC(func) \
+	BOOT_TARGET_DEVICES_SCSI(func) \
+	BOOT_TARGET_DEVICES_DHCP(func)
+#endif
+
 
 #ifdef CONFIG_OLD_SUNXI_KERNEL_COMPAT
 #define BOOTCMD_SUNXI_COMPAT \
@@ -488,6 +514,8 @@ extern int soft_i2c_gpio_scl;
 #define FDTFILE CONFIG_DEFAULT_DEVICE_TREE ".dtb"
 #endif
 
+#define UUID_PXE_WANDERER "0bf71a2e-e085-11e8-9074-1b4cae7f6958"
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	CONSOLE_ENV_SETTINGS \
 	MEM_LAYOUT_ENV_SETTINGS \
@@ -500,6 +528,9 @@ extern int soft_i2c_gpio_scl;
 	"uuid_gpt_system=" UUID_GPT_SYSTEM "\0" \
 	"partitions=" PARTS_DEFAULT "\0" \
 	BOOTCMD_SUNXI_COMPAT \
+	"pxeuuid=" UUID_PXE_WANDERER "\0" \
+	"bootp_vci=PXEClient:Arch:00011:UNDI:001001\0" \
+	"bootpretryperiod=6000\0" \
 	BOOTENV
 
 #else /* ifndef CONFIG_SPL_BUILD */

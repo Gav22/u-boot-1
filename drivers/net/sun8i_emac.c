@@ -910,7 +910,7 @@ static int sun8i_emac_eth_ofdata_to_platdata(struct udevice *dev)
 	int reset_flags = GPIOD_IS_OUT;
 	int ret = 0;
 #endif
-	int ret;
+//	int ret;
 
 	pdata->iobase = devfdt_get_addr(dev);
 	if (pdata->iobase == FDT_ADDR_T_NONE) {

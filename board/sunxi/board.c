@@ -1104,10 +1104,7 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 	/* Is the KSZ present? Tweak the fdt accordingly */
 	if (miiphy_get_dev_by_name("ksz8794_spi")) {
 		ofs = fdt_node_offset_by_compatible(blob, 0, "fsn,wand2-3-mac");
-	} else {
-		/* No, we revert to stripped down single emac mode */
-		ofs = fdt_node_offset_by_compatible(blob, 0, "fsn,wand2-1-mac");
-	}
+	} 
 	if (ofs > 0) {
 		sunxi_enable_ft_option(blob, ofs);
 	} else {

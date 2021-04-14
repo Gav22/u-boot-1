@@ -35,6 +35,9 @@
 		ethernet1 = &vmac1;
 		ethernet2 = &vmac2;
 		serial0 = &uart0;
+		spi0 = &spi0;
+		spi1 = &spi1;
+		i2c0 = &i2c0;
 		serial1 = &uart1;
 		serial2 = &uart2;
 		serial3 = &uart3;
@@ -242,17 +245,17 @@
 		reg = <0x2c>;
 		reset-gpios = <&pio 7 10 GPIO_ACTIVE_LOW>;
 	};
-	max6639: max6639@2e {
-		compatible = "maxim,max6639";
-		reg = <0x2e>;
-		ot-gpios = <&pio 1 3 GPIO_ACTIVE_LOW>; /* ~overtemp input */
-		thermal-zone = "cpu-thermal"; /* so we can send it events */
-		#cooling-cells = <2>;
-	};
 	eeprom@50 {
 		compatible = "atmel,24c02";
 		reg = <0x50>;
+		pagesize = <8>;
+		
 	};
+};
+
+&i2c0_pins {
+	bias-pull-up;
+	drive-strength = <30>;
 };
 
 &i2c1 {
@@ -299,23 +302,13 @@
 	status = "okay";
 };
 
-/* Single 100BASE-T via KSZ8081, disabled unless U-boot enables */
 &emac {
-	compatible = "allwinner,sun50i-a64-emac", "fsn,wand2-1-mac";
 	pinctrl-names = "default";
-	pinctrl-0 = <&rmii_pins>;
-	phy-mode = "rmii";
+	pinctrl-0 = <&rgmii_pins>;
+	phy-mode = "rgmii";
 	phy-handle = <&ext_rmii_phy>;
-	status = "disabled"; /* u-boot will enable if detected */
-	mdio {
-		#address-cells = <1>;
-		#size-cells = <0>;
-		status = "okay";
-		ext_rmii_phy: ethernet-phy@0 {
-			compatible = "ethernet-phy-ieee802.3-c22";
-			reg = <0>;
-		};
-	};
+	phy-supply = <&reg_dc1sw>;
+	status = "okay";
 };
 
 &hdmi {
@@ -330,6 +323,14 @@
 };
 
 &mixer1 {
+	status = "okay";
+};
+
+&spi0 {
+	status = "okay";
+};
+
+&spi1 {
 	status = "okay";
 };
 
@@ -387,9 +388,10 @@
 	 * Ethernet PHY needs 30ms to properly power up and some more
 	 * to initialize. 100ms should be plenty of time to finish
 	 * whole process.
-	 */
-	 regulator-always-on;
-	regulator-enable-ramp-delay = <100000>;
+	 *
+	 * regulator-always-on;
+	 * regulator-enable-ramp-delay = <100000>;
+	*/
 	regulator-name = "vcc-phy";
 };
 

@@ -1,0 +1,41 @@
+#!/usr/bin/make -f
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+# DH_VERBOSE = 1
+# see FEATURE AREAS in dpkg-buildflags(1)
+#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+# see ENVIRONMENT in dpkg-buildflags(1)
+# package maintainers to append CFLAGS
+#export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
+# package maintainers to append LDFLAGS
+#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+# Clear debianized compile flags
+export DEB_CFLAGS_MAINT_SET=
+export DEB_LDFLAGS_MAINT_SET=
+
+ATF_BIN=/usr/share/arm-trusted-firmware/bl31.bin
+UBOOT_BIN=u-boot-pinea64-2.spl
+ENV_BIN=tools/env/fw_printenv
+
+$(UBOOT_BIN):
+	export BL31=$(ATF_BIN) && \
+	export CROSS_COMPILE=$(DEB_HOST_GNU_TYPE)- && \
+	cp debian/conf/uboot.config .config && \
+	$(MAKE) oldconfig && \
+	$(MAKE) -j4 && \
+	cat spl/sunxi-spl.bin u-boot.itb > $@
+
+$(ENV_BIN): $(UBOOT_BIN)
+	export CROSS_COMPILE=$(DEB_HOST_GNU_TYPE)- && \
+	$(MAKE) envtools
+
+override_dh_auto_build: $(UBOOT_BIN) $(ENV_BIN)
+
+override_dh_auto_test:
+
+override_dh_shlibdeps:
+	dh_shlibdeps -l /usr/aarch64-linux-gnu/lib
+
+%:
+	dh $@ 

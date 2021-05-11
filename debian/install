@@ -1,0 +1,6 @@
+u-boot-pinea64-2.spl usr/share/u-boot-pinea64-2/
+tools/env/fw_printenv usr/share/u-boot-pinea64-2/
+debian/conf/fw_env.config /etc/
+debian/conf/update-uboot usr/share/u-boot-pinea64-2/
+debian/conf/bootnext usr/share/u-boot-pinea64-2/
+#debian/pre-built-spl/u-boot-pinea64-2.spl usr/share/u-boot-pinea64-2/

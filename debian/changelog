@@ -1,3 +1,9 @@
+u-boot-pinea64-2 (1.05) buster; urgency=medium
+
+  * Update-uboot paths needed updating
+
+ -- Gavin D <gavin@farsouthnet.com>  Tue, 11 May 2021 15:10:16 +0200
+
 u-boot-pinea64-2 (1.04) buster; urgency=medium
 
   * Only a rev change for build purposes

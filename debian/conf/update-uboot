@@ -12,11 +12,10 @@
 # Default if none provided follows above order, first device present is updated
 #
 BDEV=$1
-#BIN=/usr/share/u-boot-pinea64/u-boot-pinea64.spl
-#u-boot-pinea64-2.spl is a prebuilt spl from aufan. 
-#version 3 will support loading env from spi.
-BIN=/usr/share/u-boot-pinea64/u-boot-pinea64-2.spl
-SETENV=/usr/share/u-boot-pinea64/fw_setenv
+#BIN=/usr/share/u-boot-pinea64-2/u-boot-pinea64.spl
+#u-boot-pinea64-2.spl is built from u-boot v2021.01-rc1-149-g7a8ac9df
+BIN=/usr/share/u-boot-pinea64-2/u-boot-pinea64-2.spl
+SETENV=/usr/share/u-boot-pinea64-2/fw_setenv
 
 copy_to_dev() {
   s=$1
@@ -54,10 +53,10 @@ copy_to_dev() {
     return 1
   fi 
 
-  if [ $BIN = "/usr/share/u-boot-pinea64/u-boot-pinea64-2.spl" ]; then
-        echo "Using pre-built bootloader..."
-  else
+  if [ $BIN = "/usr/share/u-boot-pinea64-2/u-boot-pinea64-2.spl" ]; then
         echo "Using source built bootloader..."
+  else
+        echo "Using pre-built bootloader..."
   fi 
   
   if [ "$fle" != "" ]; then

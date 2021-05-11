@@ -311,6 +311,13 @@
 	status = "okay";
 };
 
+&mdio {
+	ext_rmii_phy: ethernet-phy@0 {
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0>;
+	};
+};
+
 &hdmi {
 	hvcc-supply = <&reg_dldo1>;
 	status = "okay";

@@ -223,17 +223,14 @@
 				};
 				cpu_warm_limit_cpu {
 					trip = <&cpu_alert0>;
-					cooling-device = <&max6639 0 1>;
 				};
 	
 				cpu_hot_limit_cpu {
 					trip = <&cpu_alert1>;
-					cooling-device = <&max6639 1 2>;
 				};
 	
 				cpu_extremly_hot_limit_cpu {
 					trip = <&cpu_crit>;
-					cooling-device = <&max6639 2 3>;
 				};
 			};
 

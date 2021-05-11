@@ -14,7 +14,8 @@
 export DEB_CFLAGS_MAINT_SET=
 export DEB_LDFLAGS_MAINT_SET=
 
-ATF_BIN=/usr/share/arm-trusted-firmware/bl31.bin
+#ATF_BIN=/usr/share/arm-trusted-firmware/bl31.bin
+ATF_BIN=/usr/lib/arm-trusted-firmware/sun50i_a64/bl31.bin
 UBOOT_BIN=u-boot-pinea64-2.spl
 ENV_BIN=tools/env/fw_printenv
 

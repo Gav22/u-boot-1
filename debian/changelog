@@ -1,11 +1,17 @@
+u-boot-pinea64-2 (1.03) buster; urgency=medium
+
+  * update update-uboot
+
+ -- Gavin D <gavin@farsouthnet.com>  Tue, 11 May 2021 12:43:16 +0200
+
 u-boot-pinea64-2 (1.02) buster; urgency=medium
 
   * update uboot-config
 
- -- Gavin Delcie <gavin@farsouthnet.com>  Tue, 11 May 2021 09:46:16 +0200
+ -- Gavin D <gavin@farsouthnet.com>  Tue, 11 May 2021 09:46:16 +0200
 
 u-boot-pinea64-2 (1.01) buster; urgency=medium
 
   * Initial release
 
- -- Gavin Delcie <gavin@farsouthnet.com>  Tue, 11 May 2021 08:18:16 +0200
+ -- Gavin D <gavin@farsouthnet.com>  Tue, 11 May 2021 08:18:16 +0200

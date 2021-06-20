@@ -118,6 +118,10 @@
 #define CONFIG_SYS_MAX_NAND_DEVICE 8
 #endif
 
+#ifdef CONFIG_SPL_SPI_SUNXI
+#define CONFIG_SYS_SPI_U_BOOT_OFFS	0x8000
+#endif
+
 /* mmc config */
 #ifdef CONFIG_MMC
 #define CONFIG_MMC_SUNXI_SLOT		0
@@ -174,6 +178,7 @@
  * autoconf.mk.
  */
 #if CONFIG_SUNXI_SRAM_ADDRESS == 0x10000
+#define CONFIG_SPL_TEXT_BASE		0x10060		/* sram start+header */
 #define CONFIG_SPL_MAX_SIZE		0x7fa0		/* 32 KiB */
 #ifdef CONFIG_ARM64
 /* end of SRAM A2 for now, as SRAM A1 is pretty tight for an ARM64 build */
@@ -182,10 +187,12 @@
 #define LOW_LEVEL_SRAM_STACK		0x00018000
 #endif /* !CONFIG_ARM64 */
 #elif CONFIG_SUNXI_SRAM_ADDRESS == 0x20000
+#define CONFIG_SPL_TEXT_BASE		0x20060		/* sram start+header */
 #define CONFIG_SPL_MAX_SIZE		0x7fa0		/* 32 KiB */
 /* end of SRAM A2 on H6 for now */
 #define LOW_LEVEL_SRAM_STACK		0x00118000
 #else
+#define CONFIG_SPL_TEXT_BASE		0x60		/* sram start+header */
 #define CONFIG_SPL_MAX_SIZE		0x5fa0		/* 24KB on sun4i/sun7i */
 #define LOW_LEVEL_SRAM_STACK		0x00008000	/* End of sram */
 #endif

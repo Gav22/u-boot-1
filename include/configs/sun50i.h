@@ -18,6 +18,8 @@
 #define GICC_BASE		0x3022000
 #endif
 
+#define CONFIG_ENV_SECT_SIZE		0x20000 /* 64K */
+
 /*
  * Include common sunxi configuration where most the settings are
  */

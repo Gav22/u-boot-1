@@ -102,25 +102,6 @@
 		status = "disabled";
 	};
 
-	hdmi_sound: hdmi-sound {
-		compatible = "simple-audio-card";
-		simple-audio-card,format = "i2s";
-		simple-audio-card,name = "sun50i-a64-hdmi";
-		simple-audio-card,mclk-fs = <128>;
-		simple-audio-card,frame-inversion;
-		status = "disabled";
-
-		simple-audio-card,codec {
-			sound-dai = <&hdmi>;
-		};
-
-		simple-audio-card,cpu {
-			sound-dai = <&i2s2>;
-			dai-tdm-slot-num = <2>;
-			dai-tdm-slot-width = <32>;
-		};
-	};
-
 	osc24M: osc24M_clk {
 		#clock-cells = <0>;
 		compatible = "fixed-clock";
@@ -156,33 +137,22 @@
 		shmem = <&scpi_sram>;
 	};
 
-	sound: sound {
-		#address-cells = <1>;
-		#size-cells = <0>;
+	sound_spdif {
 		compatible = "simple-audio-card";
-		simple-audio-card,name = "sun50i-a64-audio";
-		simple-audio-card,aux-devs = <&codec_analog>;
-		simple-audio-card,routing =
-				"Left DAC", "DAC Left",
-				"Right DAC", "DAC Right",
-				"ADC Left", "Left ADC",
-				"ADC Right", "Right ADC";
-		status = "disabled";
+		simple-audio-card,name = "On-board SPDIF";
 
-		simple-audio-card,dai-link@0 {
-			format = "i2s";
-			frame-master = <&link0_cpu>;
-			bitclock-master = <&link0_cpu>;
-			mclk-fs = <128>;
-
-			link0_cpu: cpu {
-				sound-dai = <&dai>;
-			};
-
-			link0_codec: codec {
-				sound-dai = <&codec 0>;
-			};
+		simple-audio-card,cpu {
+			sound-dai = <&spdif>;
 		};
+
+		simple-audio-card,codec {
+			sound-dai = <&spdif_out>;
+		};
+	};
+
+	spdif_out: spdif-out {
+		#sound-dai-cells = <0>;
+		compatible = "linux,spdif-dit";
 	};
 
 	timer {
@@ -197,83 +167,6 @@
 			(GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>,
 			     <GIC_PPI 10
 			(GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
-	};
-
-	thermal-zones {
-		cpu_thermal: cpu0-thermal {
-			/* milliseconds */
-			polling-delay-passive = <250>;
-			polling-delay = <1000>;
-			thermal-sensors = <&ths 0>;
-
-			cooling-maps {
-				map0 {
-					trip = <&cpu_alert0>;
-					cooling-device = <&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-							 <&cpu1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-							 <&cpu2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-							 <&cpu3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
-				};
-				map1 {
-					trip = <&cpu_alert1>;
-					cooling-device = <&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-							 <&cpu1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-							 <&cpu2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-							 <&cpu3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
-				};
-				cpu_warm_limit_cpu {
-					trip = <&cpu_alert0>;
-					cooling-device = <&max6639 0 1>;
-				};
-	
-				cpu_hot_limit_cpu {
-					trip = <&cpu_alert1>;
-					cooling-device = <&max6639 1 2>;
-				};
-	
-				cpu_extremly_hot_limit_cpu {
-					trip = <&cpu_crit>;
-					cooling-device = <&max6639 2 3>;
-				};
-			};
-
-			trips {
-				cpu_alert0: cpu_alert0 {
-					/* milliCelsius */
-					temperature = <75000>;
-					hysteresis = <2000>;
-					type = "passive";
-				};
-
-				cpu_alert1: cpu_alert1 {
-					/* milliCelsius */
-					temperature = <90000>;
-					hysteresis = <2000>;
-					type = "hot";
-				};
-
-				cpu_crit: cpu_crit {
-					/* milliCelsius */
-					temperature = <110000>;
-					hysteresis = <2000>;
-					type = "critical";
-				};
-			};
-		};
-
-		gpu0_thermal: gpu0-thermal {
-			/* milliseconds */
-			polling-delay-passive = <0>;
-			polling-delay = <0>;
-			thermal-sensors = <&ths 1>;
-		};
-
-		gpu1_thermal: gpu1-thermal {
-			/* milliseconds */
-			polling-delay-passive = <0>;
-			polling-delay = <0>;
-			thermal-sensors = <&ths 2>;
-		};
 	};
 
 	soc {
@@ -822,11 +715,15 @@
 			spi0_pins: spi0-pins {
 				pins = "PC0", "PC1", "PC2", "PC3";
 				function = "spi0";
+				drive-strength = <30>;
+				bias-pull-up;
 			};
 
 			spi1_pins: spi1-pins {
 				pins = "PD0", "PD1", "PD2", "PD3";
 				function = "spi1";
+				drive-strength = <30>;
+				bias-pull-up;
 			};
 
 			uart0_pb_pins: uart0-pb-pins {
@@ -1062,6 +959,40 @@
 			pinctrl-names = "default";
 			pinctrl-0 = <&i2c2_pins>;
 			status = "disabled";
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
+		spi0: spi@1c68000 {
+			compatible = "allwinner,sun6i-a31-spi";
+			reg = <0x01c68000 0x1000>;
+			interrupts = <GIC_SPI 65 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&ccu CLK_BUS_SPI0>, <&ccu CLK_SPI0>;
+			clock-names = "ahb", "mod";
+			dmas = <&dma 23>, <&dma 23>;
+			dma-names = "rx", "tx";
+			pinctrl-names = "default";
+			pinctrl-0 = <&spi0_pins>;
+			resets = <&ccu RST_BUS_SPI0>;
+			status = "disabled";
+			num-cs = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
+		spi1: spi@1c69000 {
+			compatible = "allwinner,sun6i-a31-spi";
+			reg = <0x01c69000 0x1000>;
+			interrupts = <GIC_SPI 66 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&ccu CLK_BUS_SPI1>, <&ccu CLK_SPI1>;
+			clock-names = "ahb", "mod";
+			dmas = <&dma 24>, <&dma 24>;
+			dma-names = "rx", "tx";
+			pinctrl-names = "default";
+			pinctrl-0 = <&spi1_pins>;
+			resets = <&ccu RST_BUS_SPI1>;
+			status = "disabled";
+			num-cs = <1>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 		};

@@ -16,24 +16,8 @@
 	compatible = "pine64,mscm", "pine64,sopine",
 		     "allwinner,sun50i-a64";
 
-	/* Holder for manufacturing info passed from boot */
-	mfginfo: mfginfo {
-		fsn_serial = "";
-		test_date = "";
-		board_name = "";
-	};
-
-	/* Just holders for additional MAC addresses passed from boot */
-	vmac1: vmac1 {
-	};
-	
-	vmac2: vmac2 {
-	};
-	
-	aliases {
+	aliases { /* These will hint at the ordering / bus number assignment in u-boot dm */
 		ethernet0 = &emac;
-		ethernet1 = &vmac1;
-		ethernet2 = &vmac2;
 		serial0 = &uart0;
 		spi0 = &spi0;
 		spi1 = &spi1;
@@ -87,211 +71,9 @@
 			label = "wifi:rst";
 			gpios = <&r_pio 0 4 GPIO_ACTIVE_HIGH>;
 			default-state = "on";
-		};*/
-		
-	};
-	spi0: spi@1c68000 {
-		//compatible = "allwinner,sun6i-a31-spi";
-		compatible = "allwinner,sun8i-h3-spi";
-		reg = <0x01c68000 0x1000>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&spi0_pins>;
-		interrupts = <GIC_SPI 65 IRQ_TYPE_LEVEL_HIGH>;
-		clocks = <&ccu CLK_BUS_SPI0>, <&ccu CLK_SPI0>;
-		resets = <&ccu RST_BUS_SPI0>;
-		clock-names = "ahb", "mod";
-		/*dmas = <&dma 23>, <&dma 23>;
-		dma-names = "rx", "tx";*/
-		status = "okay";
-		num-cs = <1>;
-		#address-cells = <1>;
-		#size-cells = <0>;
-		flash: w25q128@0 {
-			#address-cells = <1>;
-			#size-cells = <1>;
-			compatible = "winbond,w25q128", "jedec,spi-nor";
-			spi-max-frequency = <15000000>;
-			reg = <0>;
-
-			partition@00000 {
-				label = "U-boot";
-				reg = <0x00000 0xde000>;
-				read-only;
-			};
-	
-			partition@de000 {
-				label = "ROM";
-				reg = <0xde000 0x2000>;
-				read-only;
-			};
-	
-			partition@e0000 {
-				label = "U-boot-env";
-				reg = <0xe0000 0x10000>;
-			};
-	
-			partition@f0000 {
-				label = "env2";
-				reg = <0xe0000 0x10000>;
-			};
-
-			partition@100000 {
-				label = "Unused1";
-				reg = <0x100000 0x100000>;
-			};
-
-		};
+		};*/	
 	};
 	
-	/* Option: ethernet via KSZ8794 switch */
-	emacsw: ethernet@1c30000r {
-		compatible = "allwinner,sun50i-a64-emac", "fsn,wand2-3-mac";
-		syscon = <&syscon>;
-		reg = <0x01c30000 0x10000>;
-		interrupts = <GIC_SPI 82 IRQ_TYPE_LEVEL_HIGH>;
-		interrupt-names = "macirq";
-		resets = <&ccu RST_BUS_EMAC>;
-		reset-names = "stmmaceth";
-		clocks = <&ccu CLK_BUS_EMAC>;
-		clock-names = "stmmaceth";
-		#address-cells = <1>;
-		#size-cells = <0>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&rgmii_pins>;
-		phy-mode = "rgmii";
-		phy-supply = <&reg_dc1sw>;
-		status = "okay"; /* u-boot will enable if detected */
-		fixed-link {
-	    	speed = <1000>;
-	      	full-duplex;
-		};
-	};
-	
-	spi1: spi@01c69000 {
-		//compatible = "allwinner,sun6i-a31-spi";
-		compatible = "allwinner,sun8i-h3-spi";
-		reg = <0x01c69000 0x1000>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&spi1_pins>;
-		interrupts = <GIC_SPI 66 IRQ_TYPE_LEVEL_HIGH>;
-		clocks = <&ccu CLK_BUS_SPI1>, <&ccu CLK_SPI1>;
-		resets = <&ccu RST_BUS_SPI1>;
-		clock-names = "ahb", "mod";
-		/*dmas = <&dma 24>, <&dma 24>;
-		dma-names = "rx", "tx";*/
-		status = "okay";
-		num-cs = <1>;
-		#address-cells = <1>;
-		#size-cells = <0>;
-		ksz8794@0 {
-			compatible = "micrel,ksz8794";
-			spi-max-frequency = <1000000>;
-			reg = <0>;
-			reset-gpios = <&pio 7 11 GPIO_ACTIVE_LOW>;			
-
-			ports {
-				#address-cells = <1>;
-				#size-cells = <0>;
-				port@0 {
-					reg = <0>;
-					label = "eth2";
-				};
-				port@1 {
-					reg = <1>;
-					label = "eth1";
-				};
-				port@2 {
-					reg = <2>;
-					label = "eth0";
-				};
-				port@3 {
-					reg = <3>;
-					label = "cpu";
-					ethernet = <&emacsw>;
-                    fixed-link {
-						speed = <1000>;
-						full-duplex;
-					};
-				};
-			};
-		}; /* end ksz8794 */
-	}; /* end spi1 */
-	
-	/* We sequence the wifi chip reset to enable probing */
-	wifi_pwrseq: wifi_pwrseq {
-		compatible = "mmc-pwrseq-wilc";
-		reset-gpios = <&r_pio 0 2 GPIO_ACTIVE_LOW>, <&r_pio 0 4 GPIO_ACTIVE_LOW>; 
-	};
-};
-
-/* Hog required GPIOs, e.g. enable USB power */
-&pio {
-	pullup: pullup {
-		pins = "PC7", "PC4", "PB3";
-		bias-pull-up;
-	};
-};
-
-&r_pio {
-	input-debounce = <1>; /* 1us */
-};
-
-&i2c0 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c0_pins>;
-	status = "okay";
-	usb2514b@2c {
-		compatible = "microchip,usb2514b";
-		reg = <0x2c>;
-		reset-gpios = <&pio 7 10 GPIO_ACTIVE_LOW>;
-	};
-	eeprom@50 {
-		compatible = "atmel,24c02";
-		reg = <0x50>;
-		pagesize = <8>;
-		
-	};
-};
-
-&i2c0_pins {
-	bias-pull-up;
-	drive-strength = <30>;
-};
-
-&i2c1 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c1_pins>;
-	status = "okay";
-};
-	
-&i2c2 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c2_pins>;
-	status = "okay";
-};
-
-//&ac_power_supply {
-//	status = "okay";
-//};
-
-//&battery_power_supply {
-//	status = "okay";
-//};
-
-&codec {
-	status = "okay";
-};
-
-&codec_analog {
-	status = "okay";
-};
-
-&dai {
-	status = "okay";
-};
-
-&de {
-	status = "okay";
 };
 
 &ehci0 {
@@ -311,6 +93,13 @@
 	status = "okay";
 };
 
+&mdio {
+	ext_rmii_phy: ethernet-phy@0 {
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0>;
+	};
+};
+
 &hdmi {
 	hvcc-supply = <&reg_dldo1>;
 	status = "okay";
@@ -322,9 +111,27 @@
 	};
 };
 
-&mixer1 {
+&i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c0_pins>;
 	status = "okay";
+	eeprom: eeprom@50 {
+		compatible = "atmel,24c02";
+		reg = <0x50>;
+		pagesize = <8>;
+	};
+	usb2514b@2c {
+		compatible = "microchip,usb2514b";
+		reg = <0x2c>;
+		reset-gpios = <&pio 7 10 GPIO_ACTIVE_LOW>;
+	};
 };
+
+&i2c0_pins {
+	bias-pull-up;
+	drive-strength = <30>;
+};
+
 
 &spi0 {
 	status = "okay";
@@ -337,42 +144,12 @@
 &mmc2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&mmc2_pins>;
-	vmmc-supply = <&reg_vcc3v3>;
-	vqmmc-supply = <&reg_dcdc1>;
+	vmmc-supply = <&reg_dcdc1>;
+	vqmmc-supply = <&reg_vcc1v8>;
 	bus-width = <4>;
+	non-removable;
 	cap-mmc-hw-reset;
 	status = "okay";
-};
-
-&reg_eldo3 {
-	regulator-always-on;
-	regulator-min-microvolt = <1800000>;
-	regulator-max-microvolt = <1800000>;
-	regulator-name = "vdd-1v8-wifi";
-};
-
-&mmc1 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&mmc1_pins>;
-	vmmc-supply = <&reg_vcc3v3>;
-	/*vqmmc-supply = <&reg_eldo1>;*/
-	mmc-pwrseq = <&wifi_pwrseq>;
-	bus-width = <4>;
-	cap-mmc-hw-reset;
-	/*non-removable;*/
-	broken-cd;
-	max-frequency = <40000000>;
-	status = "okay";
-	/* wilc1000 is powered by DLDO4 @ 3.3V and ELDO1/3 @ 1.8V - core must rise before/with i/o */
-	wilc_sdio: wilc_sdio@0 {
-	    compatible = "microchip,wilc1000";
-		reg = <0>;
-		status = "okay";
-		bus-width = <4>;
-		gpio_reset = <&r_pio 0 4 GPIO_ACTIVE_LOW>; 
-		gpio_chip_en = <&r_pio 0 2 GPIO_ACTIVE_HIGH>;
-	    gpio_irq = <&r_pio 0 6 IRQ_TYPE_LEVEL_LOW>;
-	};
 };
 
 &ohci0 {
@@ -416,20 +193,6 @@
 
 &simplefb_hdmi {
 	vcc-hdmi-supply = <&reg_dldo1>;
-};
-
-&sound {
-	simple-audio-card,aux-devs = <&codec_analog>;
-	simple-audio-card,widgets = "Microphone", "Microphone Jack",
-				    "Headphone", "Headphone Jack";
-	simple-audio-card,routing =
-			"Left DAC", "AIF1 Slot 0 Left",
-			"Right DAC", "AIF1 Slot 0 Right",
-			"Headphone Jack", "HP",
-			"AIF1 Slot 0 Left ADC", "Left ADC",
-			"AIF1 Slot 0 Right ADC", "Right ADC",
-			"MIC2", "Microphone Jack";
-	status = "okay";
 };
 
 &uart0 {

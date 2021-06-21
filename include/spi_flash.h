@@ -112,7 +112,7 @@ int spl_flash_get_sw_write_prot(struct udevice *dev);
  * @dev: SPI-flash device to probe
  * @return 0 if OK, -ve on error
  */
-int spi_flash_std_probe(struct udevice *dev);
+//static int spi_flash_std_probe(struct udevice *dev);
 
 int spi_flash_probe_bus_cs(unsigned int busnum, unsigned int cs,
 			   unsigned int max_hz, unsigned int spi_mode,
